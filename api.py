@@ -1,25 +1,28 @@
-import requests
+import aiohttp
 
-def get_raid_ids():
+
+async def get_raid_ids(session: aiohttp.ClientSession):
     url = "https://raven.blocksmithlabs.io/api/projects/all"
     payload = "\"all\""
-    response = requests.request("POST", url, data=payload)
-    list_form_json = response.json()
+    response = await session.post(url, data=payload)
+    list_form_json = await response.json()
     id_list = [ID['_id'] for ID in list_form_json['data']]
     return id_list
 
 
-def sign_request(token: str, ID: str) -> None:
-    url = f"https://raven.blocksmithlabs.io/api/tweet/{ID}/enter"
-    payload = ""
-    headers = {
-        "cookie": f"__Secure-next-auth.session-token={token}"}
-    response = requests.request("POST", url, data=payload, headers=headers)
-    if response.status_code == 502:
-        print('Попробуйте перезапусть програму, не удалось нажать кнопку')
-        return
-    response_date = response.json()
-    if 'success' in response_date:
-        print(response_date['success'])
+async def submit_raid(session: aiohttp.ClientSession, token: str, raid_id: str) -> str or None:
+    url = f"https://raven.blocksmithlabs.io/api/tweet/{raid_id}/enter"
+    headers = {"cookie": f"__Secure-next-auth.session-token={token}"}
+    response = await session.post(url, headers=headers)
+    if response.status == 502:
+        return 'Не удалось нажать кнопку (ошибка 502): попробуйте позже'
+    data = await response.json()
+    if 'success' in data:
+        if data['success']:
+            return f"Успешно!"
+        else:
+            return f"Не удалось принять участие в рейде: не выполнены условия для участия"
+    elif data["error"] == "You must link a wallet in the 'Account' page to enter raffles.":
+        return "Вы не присоединили Phantom кошелек к аккаунту!"
     else:
-        print(response_date['error'])
+        return data['error']
