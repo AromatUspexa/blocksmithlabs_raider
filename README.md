@@ -1,4 +1,4 @@
-# SOL sender 
+# blocksmithlabs_raider
 [ [my_channel](https://t.me/temporarily_crypto) ]
 
 
