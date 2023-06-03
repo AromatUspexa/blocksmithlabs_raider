@@ -10,19 +10,22 @@ async def get_raid_ids(session: aiohttp.ClientSession):
     return id_list
 
 
-async def submit_raid(session: aiohttp.ClientSession, token: str, raid_id: str) -> str or None:
+async def submit_raid(session: aiohttp.ClientSession, token: str, raid_id: str, proxy: str) -> str or None:
+    ip, port, username, password = proxy.split(':')
+    proxy = f'{username}:{password}@{ip}:{port}'
     url = f"https://raven.blocksmithlabs.io/api/tweet/{raid_id}/enter"
     headers = {"cookie": f"__Secure-next-auth.session-token={token}"}
-    response = await session.post(url, headers=headers)
+    response = await session.post(url, headers=headers, proxy=f'http://{proxy}')
     if response.status == 502:
         return 'Не удалось нажать кнопку (ошибка 502): попробуйте позже'
     data = await response.json()
     if 'success' in data:
         if data['success']:
-            return f"Успешно!"
+            return f"Успешно! <===> {proxy}"
         else:
-            return f"Не удалось принять участие в рейде: не выполнены условия для участия"
-    elif data["error"] == "You must link a wallet in the 'Account' page to enter raffles.":
-        return "Вы не присоединили Phantom кошелек к аккаунту!"
+            return f"Не удалось принять участие в рейде: не выполнены условия для участия <===> {proxy}"
+    elif data["error"] == f"You must link a wallet in the 'Account' page to enter raffles. <===> {proxy}":
+        return f"Вы не присоединили Phantom кошелек к аккаунту! <===> {proxy}"
     else:
-        return data['error']
+        return data[f'error <===> {proxy}']
+
