@@ -17,15 +17,15 @@ async def submit_raid(session: aiohttp.ClientSession, token: str, raid_id: str, 
     headers = {"cookie": f"__Secure-next-auth.session-token={token}"}
     response = await session.post(url, headers=headers, proxy=f'http://{proxy}')
     if response.status == 502:
-        return 'Не удалось нажать кнопку (ошибка 502): попробуйте позже'
+        return f'Не удалось нажать кнопку (ошибка 502): попробуйте позже <===> {ip}'
     data = await response.json()
     if 'success' in data:
         if data['success']:
-            return f"Успешно! <===> {proxy}"
+            return f"Успешно! <===> {ip}"
         else:
-            return f"Не удалось принять участие в рейде: не выполнены условия для участия <===> {proxy}"
-    elif data["error"] == f"You must link a wallet in the 'Account' page to enter raffles. <===> {proxy}":
-        return f"Вы не присоединили Phantom кошелек к аккаунту! <===> {proxy}"
+            return f"Не удалось принять участие в рейде: не выполнены условия для участия <===> {ip}"
+    elif data["error"] == f"You must link a wallet in the 'Account' page to enter raffles. <===> {ip}":
+        return f"Вы не присоединили Phantom кошелек к аккаунту! <===> {ip}"
     else:
-        return data[f'error <===> {proxy}']
+        return data[f'error <===> {ip}']
 
